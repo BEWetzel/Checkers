@@ -285,6 +285,7 @@ async function playGame(state: GameState): Promise<GameState> {
     printBoardToConsole(nState.board);
     var debug: string = "DEBUG.playGame: "
     if (nState.end == false) {
+        console.log(debug + "Enter Player Prompt")
         promptPlayer(nState, preface).then((s) => {
             // console.log(debug + "Current Player = " + nState.currentPlayerID);
             // console.log(nState.toString());
@@ -304,19 +305,10 @@ async function playGame(state: GameState): Promise<GameState> {
             nState = s
             return nState;
         });
-        // nState = await promptPlayer(nState);
-        // console.log(debug + "Current Player = " + nState.currentPlayerID);
-        // // switch the active player
-        // nState.currentPlayerID!++;
-        // if (nState.currentPlayerID! >= nState.players.length) {
-        //     nState.currentPlayerID = 0;
-        // }
-        // console.log(debug + "Current Player = " + nState.currentPlayerID);
-        // // run the next player's turn
-        // nState = await playGame(nState);
+
     } else {
         console.log("Great Game! Congratulations Player " + (nState.currentPlayerID! + 1))
-        process.exit();
+        readMenuResponse();
     }
     return nState;
 }
@@ -347,9 +339,10 @@ async function promptPlayer(state: GameState, preface: string): Promise<GameStat
     var nState: GameState = state.clone();
     var debug: string = "DEBUG.promptPlayer: ";
     console.log(nState.players[nState.currentPlayerID!].movesToString());
-    // console.log(debug + "Preface = " + preface);
+    // console.log(debug + "test");
     var uPiece: GamePiece | undefined = await promptPiece(nState, preface);
     if (typeof uPiece !== 'undefined') {
+        // console.log(debug + "Piece Selected");
         nState = await promptMove(nState, preface, uPiece!);
     } else {
         console.log("\nYou have not selected a piece to move. Please enter a valid piece.")
@@ -488,8 +481,9 @@ async function promptJump(state: GameState, preface: string, piece: GamePiece): 
     var nState: GameState = state.clone();
     var x: number = piece.posX;
     var y: number = piece.posY;
-    var nPiece: GamePiece = nState.board[y][x].piece!;
+    var nPiece: GamePiece = nState.board[y][x].piece!.clone();
 
+    printBoardToConsole(nState.board);
     console.log(nPiece.jumpsToString());
     console.log("Format response like this -> targetX, targetY");
     var answer = await myInterface.question(preface + "Where would you like to move the piece currently at (" + x + ", " + y + ")? > ");
@@ -510,7 +504,9 @@ async function promptJump(state: GameState, preface: string, piece: GamePiece): 
         if (tX !== undefined && tY !== undefined) {
             // for each jump that the piece could make, check if there is a match
             for (var i: number = 0; i < nPiece.aMoves.length; i++) {
-                if (nPiece.aMoves[i][0] == tX && nPiece.aMoves[i][1] == tY && nPiece.aMoves[i][2] == 1) {
+                if (nPiece.aMoves[i][0] == tX && // x pos matches
+                    nPiece.aMoves[i][1] == tY &&  // y pos matches
+                    nPiece.aMoves[i][2] == 1) { // the move is a jump
                     // move the piece
                     nState = movePiece(nState, nState.currentPlayerID!, nPiece, nPiece.aMoves[i]);
 
@@ -522,8 +518,8 @@ async function promptJump(state: GameState, preface: string, piece: GamePiece): 
                             return nState;
                         }
                     }
+                    return nState;
                 }
-                return nState;
             }
         }
         // if no valid moves have been found
@@ -607,10 +603,10 @@ function movePiece(state: GameState, tPlayerID: number, tPiece: GamePiece, tMove
     // add the new piece back into the board list
     nState.board[newY][newX].piece = nPiece;
     nState.board[newY][newX].color = nColor;
-    console.log(debug + "Piece added back to Board's List " + nState.piecesToString());
+    // console.log(debug + "Piece added back to Board's List " + nState.piecesToString());
     // add piece back to the player's array of pieces
     nState.players[tPlayerID].pieces.push(nPiece);
-    console.log(debug + "Piece Added Back to Player's List " + nState.players[tPlayerID].toString());
+    // console.log(debug + "Piece Added Back to Player's List " + nState.players[tPlayerID].toString());
 
     // update the moves of all affected pieces
     if (tMove[2] < 1) { // no jumps involved
@@ -655,10 +651,10 @@ function updateMoves(boardState: GameState, piece: GamePiece,
         var x: number = nPiece.posX;
         var y: number = nPiece.posY;
         var nMoves: number[][] = []; // empty list for the new version of moves available to the piece
-        console.log("----------------------------");
-        console.log(debug + "copying data from piece at (" + x + ", " + y + ")");
-        console.log(debug + "Piece's index in player list: " + nPiece.playerPieceID)
-        console.log(debug + nPiece.toString());
+        // console.log("----------------------------");
+        // console.log(debug + "copying data from piece at (" + x + ", " + y + ")");
+        // console.log(debug + "Piece's index in player list: " + nPiece.playerPieceID)
+        // console.log(debug + nPiece.toString());
 
         // update this piece's available moves
         switch (nPiece.kinged) {
@@ -737,10 +733,10 @@ function updateMoves(boardState: GameState, piece: GamePiece,
         nState.players[team].pieces[nPiece.playerPieceID] = nPiece;
 
         // if this piece has changed any values, output the changes made.
-        if (nMoves.length > 0) {
-            console.log(debug + "Listing modified moves for Player " + (team + 1));
-            console.log(debug + nState.players[team].movesToString());
-        }
+        // if (nMoves.length > 0) {
+        //     console.log(debug + "Listing modified moves for Player " + (team + 1));
+        //     console.log(debug + nState.players[team].movesToString());
+        // }
     }
 
     // if calling method after a piece just moved, update available moves for affected pieces
@@ -754,18 +750,34 @@ function updateMoves(boardState: GameState, piece: GamePiece,
             // check northWest space for adjacent piece to update
             if (isAdjacentOccupied(nState.board, x, y, 0)) {
                 nState = updateMoves(nState, nState.board[y - 1][x - 1].piece!);
+                // check for jumps being blocked by this piece moving
+                if(isAdjacentOccupied(nState.board, x - 1, y - 1, 0)){
+                    nState = updateMoves(nState, nState.board[y - 2][x - 2].piece!);
+                }
             }
             // check northEast space for adjacent piece to update
             if (isAdjacentOccupied(nState.board, x, y, 1)) {
                 nState = updateMoves(nState, nState.board[y - 1][x + 1].piece!);
+                // check for jumps being blocked by this piece moving
+                if(isAdjacentOccupied(nState.board, x + 1, y - 1, 1)){
+                    nState = updateMoves(nState, nState.board[y - 2][x + 2].piece!);
+                }
             }
             // check southEast space for adjacent piece to update
             if (isAdjacentOccupied(nState.board, x, y, 2)) {
                 nState = updateMoves(nState, nState.board[y + 1][x + 1].piece!);
+                // check for jumps being blocked by this piece moving
+                if(isAdjacentOccupied(nState.board, x + 1, y + 1, 2)){
+                    nState = updateMoves(nState, nState.board[y + 2][x + 2].piece!);
+                }
             }
             // check southWest space for adjacent piece to update
             if (isAdjacentOccupied(nState.board, x, y, 3)) {
                 nState = updateMoves(nState, nState.board[y + 1][x - 1].piece!);
+                // check for jumps being blocked by this piece moving
+                if(isAdjacentOccupied(nState.board, x - 1, y + 1, 4)){
+                    nState = updateMoves(nState, nState.board[y + 2][x - 2].piece!);
+                }
             }
         }
 
@@ -773,18 +785,34 @@ function updateMoves(boardState: GameState, piece: GamePiece,
         // check northWest space for adjacent piece to update
         if (isAdjacentOccupied(nState.board, oldX!, oldY!, 0)) {
             nState = updateMoves(nState, nState.board[oldY! - 1][oldX! - 1].piece!);
+            // check for jumps unblocked by this piece moving
+            if(isAdjacentOccupied(nState.board, oldX - 1, oldY - 1, 0)){
+                nState = updateMoves(nState, nState.board[oldY - 2][oldX - 2].piece!);
+            }
         }
         // check northEast space for adjacent piece to update
         if (isAdjacentOccupied(nState.board, oldX!, oldY!, 1)) {
             nState = updateMoves(nState, nState.board[oldY! - 1][oldX! + 1].piece!);
+            // check for jumps unblocked by this piece moving
+            if(isAdjacentOccupied(nState.board, oldX + 1, oldY - 1, 1)){
+                nState = updateMoves(nState, nState.board[oldY - 2][oldX + 2].piece!);
+            }
         }
         // check southEast space for adjacent piece to update
         if (isAdjacentOccupied(nState.board, oldX!, oldY!, 2)) {
             nState = updateMoves(nState, nState.board[oldY! + 1][oldX! + 1].piece!);
+            // check for jumps unblocked by this piece moving
+            if(isAdjacentOccupied(nState.board, oldX + 1, oldY + 1, 2)){
+                nState = updateMoves(nState, nState.board[oldY + 2][oldX + 2].piece!);
+            }
         }
         // check southWest space for adjacent piece to update
         if (isAdjacentOccupied(nState.board, oldX!, oldY!, 3)) {
             nState = updateMoves(nState, nState.board[oldY! + 1][oldX! - 1].piece!);
+            // check for jumps unblocked by this piece moving
+            if(isAdjacentOccupied(nState.board, oldX - 1, oldY + 1, 3)){
+                nState = updateMoves(nState, nState.board[oldY + 2][oldX - 2].piece!);
+            }
         }
 
         // if the move was a jump, update pieces adjacent to jumped space
@@ -793,18 +821,34 @@ function updateMoves(boardState: GameState, piece: GamePiece,
             // check top northWest for adjacent piece to update
             if (isAdjacentOccupied(nState.board, jumpedX!, jumpedY!, 0)) {
                 nState = updateMoves(nState, nState.board[jumpedY! - 1][jumpedX! - 1].piece!);
+                // check for jumps unblocked by this piece moving
+                if(isAdjacentOccupied(nState.board, jumpedX! - 1, jumpedY! - 1, 0)){
+                    nState = updateMoves(nState, nState.board[jumpedY! - 2][jumpedX! - 2].piece!);
+                }
             }
             // check top northEast for adjacent piece to update
             if (isAdjacentOccupied(nState.board, jumpedX!, jumpedY!, 1)) {
                 nState = updateMoves(nState, nState.board[jumpedY! - 1][jumpedX! + 1].piece!);
+                // check for jumps unblocked by this piece moving
+                if(isAdjacentOccupied(nState.board, jumpedX! + 1, jumpedY! - 1, 1)){
+                    nState = updateMoves(nState, nState.board[jumpedY! - 2][jumpedX! + 2].piece!);
+                }
             }
             // check southEast space for adjacent piece to update
             if (isAdjacentOccupied(nState.board, jumpedX!, jumpedY!, 2)) {
                 nState = updateMoves(nState, nState.board[jumpedY! + 1][jumpedX! + 1].piece!);
+                // check for jumps unblocked by this piece moving
+                if(isAdjacentOccupied(nState.board, jumpedX! + 1, jumpedY! + 1, 2)){
+                    nState = updateMoves(nState, nState.board[jumpedY! + 2][jumpedX! + 2].piece!);
+                }
             }
             // check southWest space for adjacent piece to update
             if (isAdjacentOccupied(nState.board, jumpedX!, jumpedY!, 3)) {
                 nState = updateMoves(nState, nState.board[jumpedY! + 1][jumpedX! - 1].piece!);
+                // check for jumps unblocked by this piece moving
+                if(isAdjacentOccupied(nState.board, jumpedX! - 1, jumpedY! + 1, 3)){
+                    nState = updateMoves(nState, nState.board[jumpedY! + 2][jumpedX! - 2].piece!);
+                }
             }
         }
     }
@@ -835,7 +879,7 @@ function removePieceFromBoardState(state: GameState, piece: GamePiece): GameStat
                     space.piece.playerPieceID = pLIndex;
                     pLIndex++;
                     pL.push(space.piece);
-                    console.log(debug + space.piece.toString());
+                    // console.log(debug + space.piece.toString());
                 }
             }
         });
@@ -843,7 +887,7 @@ function removePieceFromBoardState(state: GameState, piece: GamePiece): GameStat
 
     // reset Player's array with newly-generated array of remaining pieces on board
     nState.players[piece.playerID].pieces = pL;
-    console.log(debug + "Piece Removed from Game State at (" + x + ", " + y + ") " + nState.piecesToString());
+    // console.log(debug + "Piece Removed from Game State at (" + x + ", " + y + ") " + nState.piecesToString());
     // console.log(debug + "Listing new player piece lists: ");
     // console.log(nState.players[piece.playerID].movesToString());
 
@@ -1297,7 +1341,6 @@ function printBoardToConsole(pBoard: GameSpace[][]) {
     }
     console.log("---------------------------");
 }
-
 
 function printTestBoard() {
     var checkers: GameState = buildCheckersBoard(buildBasicBoard(), true);

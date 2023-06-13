@@ -73,7 +73,7 @@ var GamePiece = /** @class */ (function () {
         return result;
     };
     GamePiece.prototype.toString = function () {
-        var result = "\nPiece at (" + this.posX + ", " + this.posY + ")";
+        var result = "\n  Piece at (" + this.posX + ", " + this.posY + ")";
         result += "\n      Team: " + (this.playerID + 1);
         result += "\n      Kinged: " + this.kinged;
         result += "\n      Index on Player List: " + this.playerPieceID;
@@ -149,7 +149,7 @@ var Player = /** @class */ (function () {
     Player.prototype.toString = function () {
         var result = " PLAYER " + (this.playerID + 1) + " Pieces Printout: ";
         this.pieces.forEach(function (piece) {
-            result += "\n   " + piece.toString();
+            result += piece.toString();
         });
         return result;
     };
@@ -220,7 +220,7 @@ var GameState = /** @class */ (function () {
         this.board.forEach(function (col) {
             col.forEach(function (space) {
                 if (space.piece !== undefined) {
-                    result += "\n   " + space.piece.toString();
+                    result += space.piece.toString();
                 }
             });
         });
@@ -304,6 +304,7 @@ function playGame(state) {
             printBoardToConsole(nState.board);
             debug = "DEBUG.playGame: ";
             if (nState.end == false) {
+                console.log(debug + "Enter Player Prompt");
                 promptPlayer(nState, preface).then(function (s) {
                     // console.log(debug + "Current Player = " + nState.currentPlayerID);
                     // console.log(nState.toString());
@@ -322,16 +323,6 @@ function playGame(state) {
                     nState = s;
                     return nState;
                 });
-                // nState = await promptPlayer(nState);
-                // console.log(debug + "Current Player = " + nState.currentPlayerID);
-                // // switch the active player
-                // nState.currentPlayerID!++;
-                // if (nState.currentPlayerID! >= nState.players.length) {
-                //     nState.currentPlayerID = 0;
-                // }
-                // console.log(debug + "Current Player = " + nState.currentPlayerID);
-                // // run the next player's turn
-                // nState = await playGame(nState);
             }
             else {
                 console.log("Great Game! Congratulations Player " + (nState.currentPlayerID + 1));
@@ -388,6 +379,7 @@ function promptPlayer(state, preface) {
                     if (!(typeof uPiece !== 'undefined')) return [3 /*break*/, 3];
                     return [4 /*yield*/, promptMove(nState, preface, uPiece)];
                 case 2:
+                    // console.log(debug + "Piece Selected");
                     nState = _a.sent();
                     return [3 /*break*/, 5];
                 case 3:
@@ -572,7 +564,7 @@ function promptJump(state, preface, piece) {
                     nState = state.clone();
                     x = piece.posX;
                     y = piece.posY;
-                    nPiece = nState.board[y][x].piece;
+                    nPiece = nState.board[y][x].piece.clone();
                     console.log(nPiece.jumpsToString());
                     console.log("Format response like this -> targetX, targetY");
                     return [4 /*yield*/, myInterface.question(preface + "Where would you like to move the piece currently at (" + x + ", " + y + ")? > ")];
@@ -596,7 +588,9 @@ function promptJump(state, preface, piece) {
                     _b.label = 3;
                 case 3:
                     if (!(i < nPiece.aMoves.length)) return [3 /*break*/, 9];
-                    if (!(nPiece.aMoves[i][0] == tX && nPiece.aMoves[i][1] == tY && nPiece.aMoves[i][2] == 1)) return [3 /*break*/, 7];
+                    if (!(nPiece.aMoves[i][0] == tX && // x pos matches
+                        nPiece.aMoves[i][1] == tY && // y pos matches
+                        nPiece.aMoves[i][2] == 1)) return [3 /*break*/, 8];
                     // move the piece
                     nState = movePiece(nState, nState.currentPlayerID, nPiece, nPiece.aMoves[i]);
                     // check if another jump can be made
@@ -701,10 +695,10 @@ function movePiece(state, tPlayerID, tPiece, tMove) {
     // add the new piece back into the board list
     nState.board[newY][newX].piece = nPiece;
     nState.board[newY][newX].color = nColor;
-    console.log(debug + "Piece added back to Board's List " + nState.piecesToString());
+    // console.log(debug + "Piece added back to Board's List " + nState.piecesToString());
     // add piece back to the player's array of pieces
     nState.players[tPlayerID].pieces.push(nPiece);
-    console.log(debug + "Piece Added Back to Player's List " + nState.players[tPlayerID].toString());
+    // console.log(debug + "Piece Added Back to Player's List " + nState.players[tPlayerID].toString());
     // update the moves of all affected pieces
     if (tMove[2] < 1) { // no jumps involved
         nState = updateMoves(nState, nPiece, true, oldX, oldY);
@@ -721,9 +715,6 @@ function movePiece(state, tPlayerID, tPiece, tMove) {
         });
         nState = updateMoves(nState, nPiece, true, oldX, oldY, true, tMove[3], tMove[4]);
     }
-    // } else {
-    // console.log("That was not a valid move. Please input a vaid move to continue.")
-    // }
     return nState;
 }
 // Update the available moves for this piece 
@@ -745,10 +736,10 @@ function updateMoves(boardState, piece, moved, oldX, oldY, jumped, jumpedX, jump
         var x = nPiece.posX;
         var y = nPiece.posY;
         var nMoves = []; // empty list for the new version of moves available to the piece
-        console.log("----------------------------");
-        console.log(debug + "copying data from piece at (" + x + ", " + y + ")");
-        console.log(debug + "Piece's index in player list: " + nPiece.playerPieceID);
-        console.log(debug + nPiece.toString());
+        // console.log("----------------------------");
+        // console.log(debug + "copying data from piece at (" + x + ", " + y + ")");
+        // console.log(debug + "Piece's index in player list: " + nPiece.playerPieceID)
+        // console.log(debug + nPiece.toString());
         // update this piece's available moves
         switch (nPiece.kinged) {
             // if kinged, check all adjacent spots for movement
@@ -819,10 +810,10 @@ function updateMoves(boardState, piece, moved, oldX, oldY, jumped, jumpedX, jump
         // add those moves to the piece in the Player's list of pieces 
         nState.players[team].pieces[nPiece.playerPieceID] = nPiece;
         // if this piece has changed any values, output the changes made.
-        if (nMoves.length > 0) {
-            console.log(debug + "Listing modified moves for Player " + (team + 1));
-            console.log(debug + nState.players[team].movesToString());
-        }
+        // if (nMoves.length > 0) {
+        //     console.log(debug + "Listing modified moves for Player " + (team + 1));
+        //     console.log(debug + nState.players[team].movesToString());
+        // }
     }
     // if calling method after a piece just moved, update available moves for affected pieces
     if (typeof moved !== 'undefined' && typeof oldX !== 'undefined' && typeof oldY !== 'undefined') { // if moved is defined, then oldK and oldY will be defined too
@@ -912,34 +903,17 @@ function removePieceFromBoardState(state, piece) {
                     space.piece.playerPieceID = pLIndex;
                     pLIndex++;
                     pL.push(space.piece);
-                    console.log(debug + space.piece.toString());
+                    // console.log(debug + space.piece.toString());
                 }
             }
         });
     });
     // reset Player's array with newly-generated array of remaining pieces on board
     nState.players[piece.playerID].pieces = pL;
-    console.log(debug + "Piece Removed from Game State at (" + x + ", " + y + ") " + nState.piecesToString());
+    // console.log(debug + "Piece Removed from Game State at (" + x + ", " + y + ") " + nState.piecesToString());
     // console.log(debug + "Listing new player piece lists: ");
     // console.log(nState.players[piece.playerID].movesToString());
     return nState;
-}
-// remove a game piece from the given array and return the new array
-// -- pieces: the array of pieces to be edited
-// -- piece: the piece to be removed from the array
-function removePieceFromArray(pieces, piece) {
-    var nPieces = pieces;
-    var index = piece.playerPieceID;
-    var debug = "DEBUG.removePieceFromArray: ";
-    // console.log(debug + "Removing piece formerly at (" + piece.posX + ", " + piece.posY + ") from Player " + (piece.playerID + 1) + "'s array of controled pieces.")
-    console.log(debug + "Removing piece from index " + index + " of player " + (piece.playerID + 1) + "'s list");
-    nPieces.splice(index, 1);
-    // reduce the stored index of pieces past the removed piece by one.
-    for (var i = index; i < nPieces.length; i++) {
-        nPieces[i].playerPieceID -= 1;
-        console.log(debug + nPieces[i].toString());
-    }
-    return nPieces;
 }
 // return a coordinate if the requested move is valid
 //  -- board: grid of current game spaces and layout of pieces
@@ -1407,3 +1381,20 @@ function printRules() {
         "-- you may move your piece to that open spot. The enemy piece \n" +
         "-- you jumped over is then removed from the board.");
 }
+// // remove a game piece from the given array and return the new array
+// // -- pieces: the array of pieces to be edited
+// // -- piece: the piece to be removed from the array
+// function removePieceFromArray(pieces: GamePiece[], piece: GamePiece): GamePiece[] {
+//     var nPieces: GamePiece[] = pieces;
+//     var index: number = piece.playerPieceID;
+//     var debug: string = "DEBUG.removePieceFromArray: ";
+//     // console.log(debug + "Removing piece formerly at (" + piece.posX + ", " + piece.posY + ") from Player " + (piece.playerID + 1) + "'s array of controled pieces.")
+//     console.log(debug + "Removing piece from index " + index + " of player " + (piece.playerID + 1) + "'s list");
+//     nPieces.splice(index, 1);
+//     // reduce the stored index of pieces past the removed piece by one.
+//     for (var i: number = index; i < nPieces.length; i++) {
+//         nPieces[i].playerPieceID -= 1;
+//         console.log(debug + nPieces[i].toString());
+//     }
+//     return nPieces;
+// }
