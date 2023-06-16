@@ -571,7 +571,7 @@ function movePiece(state: GameState, tPlayerID: number, tPiece: GamePiece, tMove
     var newY: number = tMove[1];
 
     var nPiece: GamePiece = tPiece.clone();
-    var nColor: string = nState.board[oldY][oldX].color;
+    // var nColor: string = nState.board[oldY][oldX].color;
     // console.log("");
     // console.log(debug + "Moving Piece from (" + oldX + ", " + oldY + ") to (" + newX + ", " + newY + ") ");
 
@@ -602,7 +602,7 @@ function movePiece(state: GameState, tPlayerID: number, tPiece: GamePiece, tMove
 
     // add the new piece back into the board list
     nState.board[newY][newX].piece = nPiece;
-    nState.board[newY][newX].color = nColor;
+    nState.board[newY][newX].color = paintSquare(newX,newY,generatePieceIcon(nState.board[newY][newX].piece!));
     // console.log(debug + "Piece added back to Board's List " + nState.piecesToString());
     // add piece back to the player's array of pieces
     nState.players[tPlayerID].pieces.push(nPiece);
@@ -751,7 +751,7 @@ function updateMoves(boardState: GameState, piece: GamePiece,
             if (isAdjacentOccupied(nState.board, x, y, 0)) {
                 nState = updateMoves(nState, nState.board[y - 1][x - 1].piece!);
                 // check for jumps being blocked by this piece moving
-                if(isAdjacentOccupied(nState.board, x - 1, y - 1, 0)){
+                if (isAdjacentOccupied(nState.board, x - 1, y - 1, 0)) {
                     nState = updateMoves(nState, nState.board[y - 2][x - 2].piece!);
                 }
             }
@@ -759,7 +759,7 @@ function updateMoves(boardState: GameState, piece: GamePiece,
             if (isAdjacentOccupied(nState.board, x, y, 1)) {
                 nState = updateMoves(nState, nState.board[y - 1][x + 1].piece!);
                 // check for jumps being blocked by this piece moving
-                if(isAdjacentOccupied(nState.board, x + 1, y - 1, 1)){
+                if (isAdjacentOccupied(nState.board, x + 1, y - 1, 1)) {
                     nState = updateMoves(nState, nState.board[y - 2][x + 2].piece!);
                 }
             }
@@ -767,7 +767,7 @@ function updateMoves(boardState: GameState, piece: GamePiece,
             if (isAdjacentOccupied(nState.board, x, y, 2)) {
                 nState = updateMoves(nState, nState.board[y + 1][x + 1].piece!);
                 // check for jumps being blocked by this piece moving
-                if(isAdjacentOccupied(nState.board, x + 1, y + 1, 2)){
+                if (isAdjacentOccupied(nState.board, x + 1, y + 1, 2)) {
                     nState = updateMoves(nState, nState.board[y + 2][x + 2].piece!);
                 }
             }
@@ -775,7 +775,7 @@ function updateMoves(boardState: GameState, piece: GamePiece,
             if (isAdjacentOccupied(nState.board, x, y, 3)) {
                 nState = updateMoves(nState, nState.board[y + 1][x - 1].piece!);
                 // check for jumps being blocked by this piece moving
-                if(isAdjacentOccupied(nState.board, x - 1, y + 1, 4)){
+                if (isAdjacentOccupied(nState.board, x - 1, y + 1, 4)) {
                     nState = updateMoves(nState, nState.board[y + 2][x - 2].piece!);
                 }
             }
@@ -786,7 +786,7 @@ function updateMoves(boardState: GameState, piece: GamePiece,
         if (isAdjacentOccupied(nState.board, oldX!, oldY!, 0)) {
             nState = updateMoves(nState, nState.board[oldY! - 1][oldX! - 1].piece!);
             // check for jumps unblocked by this piece moving
-            if(isAdjacentOccupied(nState.board, oldX - 1, oldY - 1, 0)){
+            if (isAdjacentOccupied(nState.board, oldX - 1, oldY - 1, 0)) {
                 nState = updateMoves(nState, nState.board[oldY - 2][oldX - 2].piece!);
             }
         }
@@ -794,7 +794,7 @@ function updateMoves(boardState: GameState, piece: GamePiece,
         if (isAdjacentOccupied(nState.board, oldX!, oldY!, 1)) {
             nState = updateMoves(nState, nState.board[oldY! - 1][oldX! + 1].piece!);
             // check for jumps unblocked by this piece moving
-            if(isAdjacentOccupied(nState.board, oldX + 1, oldY - 1, 1)){
+            if (isAdjacentOccupied(nState.board, oldX + 1, oldY - 1, 1)) {
                 nState = updateMoves(nState, nState.board[oldY - 2][oldX + 2].piece!);
             }
         }
@@ -802,7 +802,7 @@ function updateMoves(boardState: GameState, piece: GamePiece,
         if (isAdjacentOccupied(nState.board, oldX!, oldY!, 2)) {
             nState = updateMoves(nState, nState.board[oldY! + 1][oldX! + 1].piece!);
             // check for jumps unblocked by this piece moving
-            if(isAdjacentOccupied(nState.board, oldX + 1, oldY + 1, 2)){
+            if (isAdjacentOccupied(nState.board, oldX + 1, oldY + 1, 2)) {
                 nState = updateMoves(nState, nState.board[oldY + 2][oldX + 2].piece!);
             }
         }
@@ -810,7 +810,7 @@ function updateMoves(boardState: GameState, piece: GamePiece,
         if (isAdjacentOccupied(nState.board, oldX!, oldY!, 3)) {
             nState = updateMoves(nState, nState.board[oldY! + 1][oldX! - 1].piece!);
             // check for jumps unblocked by this piece moving
-            if(isAdjacentOccupied(nState.board, oldX - 1, oldY + 1, 3)){
+            if (isAdjacentOccupied(nState.board, oldX - 1, oldY + 1, 3)) {
                 nState = updateMoves(nState, nState.board[oldY + 2][oldX - 2].piece!);
             }
         }
@@ -822,7 +822,7 @@ function updateMoves(boardState: GameState, piece: GamePiece,
             if (isAdjacentOccupied(nState.board, jumpedX!, jumpedY!, 0)) {
                 nState = updateMoves(nState, nState.board[jumpedY! - 1][jumpedX! - 1].piece!);
                 // check for jumps unblocked by this piece moving
-                if(isAdjacentOccupied(nState.board, jumpedX! - 1, jumpedY! - 1, 0)){
+                if (isAdjacentOccupied(nState.board, jumpedX! - 1, jumpedY! - 1, 0)) {
                     nState = updateMoves(nState, nState.board[jumpedY! - 2][jumpedX! - 2].piece!);
                 }
             }
@@ -830,7 +830,7 @@ function updateMoves(boardState: GameState, piece: GamePiece,
             if (isAdjacentOccupied(nState.board, jumpedX!, jumpedY!, 1)) {
                 nState = updateMoves(nState, nState.board[jumpedY! - 1][jumpedX! + 1].piece!);
                 // check for jumps unblocked by this piece moving
-                if(isAdjacentOccupied(nState.board, jumpedX! + 1, jumpedY! - 1, 1)){
+                if (isAdjacentOccupied(nState.board, jumpedX! + 1, jumpedY! - 1, 1)) {
                     nState = updateMoves(nState, nState.board[jumpedY! - 2][jumpedX! + 2].piece!);
                 }
             }
@@ -838,7 +838,7 @@ function updateMoves(boardState: GameState, piece: GamePiece,
             if (isAdjacentOccupied(nState.board, jumpedX!, jumpedY!, 2)) {
                 nState = updateMoves(nState, nState.board[jumpedY! + 1][jumpedX! + 1].piece!);
                 // check for jumps unblocked by this piece moving
-                if(isAdjacentOccupied(nState.board, jumpedX! + 1, jumpedY! + 1, 2)){
+                if (isAdjacentOccupied(nState.board, jumpedX! + 1, jumpedY! + 1, 2)) {
                     nState = updateMoves(nState, nState.board[jumpedY! + 2][jumpedX! + 2].piece!);
                 }
             }
@@ -846,7 +846,7 @@ function updateMoves(boardState: GameState, piece: GamePiece,
             if (isAdjacentOccupied(nState.board, jumpedX!, jumpedY!, 3)) {
                 nState = updateMoves(nState, nState.board[jumpedY! + 1][jumpedX! - 1].piece!);
                 // check for jumps unblocked by this piece moving
-                if(isAdjacentOccupied(nState.board, jumpedX! - 1, jumpedY! + 1, 3)){
+                if (isAdjacentOccupied(nState.board, jumpedX! - 1, jumpedY! + 1, 3)) {
                     nState = updateMoves(nState, nState.board[jumpedY! + 2][jumpedX! - 2].piece!);
                 }
             }
@@ -1185,13 +1185,18 @@ function canJump(board: GameSpace[][], x: number, y: number, p: number, directio
     }
 }
 
-function paintSquare(x: number, y: number): string {
+// return a string to fill in the space in the display of the game board
+function paintSquare(x: number, y: number, icon?: string): string {
     var color: string = "";
 
+    if (typeof icon == 'undefined') {
+        icon = "   ";
+    }
+
     if (Math.abs((x % 2) + (-1 * (y % 2))) == 0) {
-        color = "\x1b[41m   \x1b[0m"; // Red Square
+        color = "\x1b[41m" + icon + "\x1b[0m"; // Red Square
     } else {
-        color = "\x1b[40m   \x1b[0m"; // Black Square
+        color = "\x1b[40m" + icon + "\x1b[0m"; // Black Square
     }
     /*// check for the color the space should be
     switch (yMod) {
@@ -1219,28 +1224,36 @@ function paintSquare(x: number, y: number): string {
     return color;
 }
 
-function addPieceToSquareColor(piece: GamePiece, red: boolean): string {
-    var result: string = "";
-    if (red) {
-        result = "\x1b[41m " + generatePieceIcon(piece) + " \x1b[0m"; // Red Square
-    } else {
-        result = "\x1b[40m " + generatePieceIcon(piece) + " \x1b[0m"; // Black Square
-    }
+// function addPieceToSquareColor(piece: GamePiece, red: boolean): string {
+//     var result: string = "";
+//     if (red) {
+//         result = "\x1b[41m " + generatePieceIcon(piece) + " \x1b[0m"; // Red Square
+//     } else {
+//         result = "\x1b[40m " + generatePieceIcon(piece) + " \x1b[0m"; // Black Square
+//     }
 
-    return result;
-}
+//     return result;
+// }
 
 // return an ascii icon for each player's pieces
 //  -- piece: game piece to be translated into a ascii character
-function generatePieceIcon(piece: GamePiece) {
-    var string: String = "";
+function generatePieceIcon(piece: GamePiece):string {
+    var string: string = "";
     switch (piece.playerID) {
         case 0: {
-            string = "1"; // player 1 ascii piece
+            if (piece.kinged) {
+                string = " 1k";
+            } else {
+                string = " 1 "; // player 1 ascii piece
+            }
             break;
         }
         default: {
-            string = "2"; // player 2 ascii piece
+            if (piece.kinged) {
+                string = " 2k";
+            } else {
+                string = " 2 "; // player 2 ascii piece
+            }
             break;
         }
     }
@@ -1267,7 +1280,7 @@ function buildCheckersBoard(tempBoard: GameSpace[][], redStart: boolean): GameSt
                 var tempPiece: GamePiece = new GamePiece(false, 0, 0, x, y, []);
                 p1.push(tempPiece);
                 tempBoard[y][x] = new GameSpace(
-                    addPieceToSquareColor(tempPiece, color),
+                    paintSquare(x,y,generatePieceIcon(tempPiece)),
                     tempPiece
                 );
                 debug += ", Team " + tempPiece.playerID + "), ";
@@ -1277,7 +1290,7 @@ function buildCheckersBoard(tempBoard: GameSpace[][], redStart: boolean): GameSt
                 var tempPiece: GamePiece = new GamePiece(false, 1, 0, x, y, []);
                 p2.push(tempPiece);
                 tempBoard[y][x] = new GameSpace(
-                    addPieceToSquareColor(tempPiece, color),
+                    paintSquare(x,y,generatePieceIcon(tempPiece)),
                     tempPiece
                 );
                 debug += ", Team " + tempPiece.playerID + "), ";

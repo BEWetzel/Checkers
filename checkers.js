@@ -326,7 +326,7 @@ function playGame(state) {
             }
             else {
                 console.log("Great Game! Congratulations Player " + (nState.currentPlayerID + 1));
-                process.exit();
+                readMenuResponse();
             }
             return [2 /*return*/, nState];
         });
@@ -565,6 +565,7 @@ function promptJump(state, preface, piece) {
                     x = piece.posX;
                     y = piece.posY;
                     nPiece = nState.board[y][x].piece.clone();
+                    printBoardToConsole(nState.board);
                     console.log(nPiece.jumpsToString());
                     console.log("Format response like this -> targetX, targetY");
                     return [4 /*yield*/, myInterface.question(preface + "Where would you like to move the piece currently at (" + x + ", " + y + ")? > ")];
@@ -667,7 +668,7 @@ function movePiece(state, tPlayerID, tPiece, tMove) {
     var newX = tMove[0];
     var newY = tMove[1];
     var nPiece = tPiece.clone();
-    var nColor = nState.board[oldY][oldX].color;
+    // var nColor: string = nState.board[oldY][oldX].color;
     // console.log("");
     // console.log(debug + "Moving Piece from (" + oldX + ", " + oldY + ") to (" + newX + ", " + newY + ") ");
     nState = removePieceFromBoardState(nState, tPiece);
@@ -694,7 +695,7 @@ function movePiece(state, tPlayerID, tPiece, tMove) {
     }
     // add the new piece back into the board list
     nState.board[newY][newX].piece = nPiece;
-    nState.board[newY][newX].color = nColor;
+    nState.board[newY][newX].color = paintSquare(newX, newY, generatePieceIcon(nState.board[newY][newX].piece));
     // console.log(debug + "Piece added back to Board's List " + nState.piecesToString());
     // add piece back to the player's array of pieces
     nState.players[tPlayerID].pieces.push(nPiece);
@@ -826,36 +827,68 @@ function updateMoves(boardState, piece, moved, oldX, oldY, jumped, jumpedX, jump
             // check northWest space for adjacent piece to update
             if (isAdjacentOccupied(nState.board, x, y, 0)) {
                 nState = updateMoves(nState, nState.board[y - 1][x - 1].piece);
+                // check for jumps being blocked by this piece moving
+                if (isAdjacentOccupied(nState.board, x - 1, y - 1, 0)) {
+                    nState = updateMoves(nState, nState.board[y - 2][x - 2].piece);
+                }
             }
             // check northEast space for adjacent piece to update
             if (isAdjacentOccupied(nState.board, x, y, 1)) {
                 nState = updateMoves(nState, nState.board[y - 1][x + 1].piece);
+                // check for jumps being blocked by this piece moving
+                if (isAdjacentOccupied(nState.board, x + 1, y - 1, 1)) {
+                    nState = updateMoves(nState, nState.board[y - 2][x + 2].piece);
+                }
             }
             // check southEast space for adjacent piece to update
             if (isAdjacentOccupied(nState.board, x, y, 2)) {
                 nState = updateMoves(nState, nState.board[y + 1][x + 1].piece);
+                // check for jumps being blocked by this piece moving
+                if (isAdjacentOccupied(nState.board, x + 1, y + 1, 2)) {
+                    nState = updateMoves(nState, nState.board[y + 2][x + 2].piece);
+                }
             }
             // check southWest space for adjacent piece to update
             if (isAdjacentOccupied(nState.board, x, y, 3)) {
                 nState = updateMoves(nState, nState.board[y + 1][x - 1].piece);
+                // check for jumps being blocked by this piece moving
+                if (isAdjacentOccupied(nState.board, x - 1, y + 1, 4)) {
+                    nState = updateMoves(nState, nState.board[y + 2][x - 2].piece);
+                }
             }
         }
         // console.log(debug + ".updatingAffectedPieces adjacent to (" + oldX + ", " + oldY + ").");
         // check northWest space for adjacent piece to update
         if (isAdjacentOccupied(nState.board, oldX, oldY, 0)) {
             nState = updateMoves(nState, nState.board[oldY - 1][oldX - 1].piece);
+            // check for jumps unblocked by this piece moving
+            if (isAdjacentOccupied(nState.board, oldX - 1, oldY - 1, 0)) {
+                nState = updateMoves(nState, nState.board[oldY - 2][oldX - 2].piece);
+            }
         }
         // check northEast space for adjacent piece to update
         if (isAdjacentOccupied(nState.board, oldX, oldY, 1)) {
             nState = updateMoves(nState, nState.board[oldY - 1][oldX + 1].piece);
+            // check for jumps unblocked by this piece moving
+            if (isAdjacentOccupied(nState.board, oldX + 1, oldY - 1, 1)) {
+                nState = updateMoves(nState, nState.board[oldY - 2][oldX + 2].piece);
+            }
         }
         // check southEast space for adjacent piece to update
         if (isAdjacentOccupied(nState.board, oldX, oldY, 2)) {
             nState = updateMoves(nState, nState.board[oldY + 1][oldX + 1].piece);
+            // check for jumps unblocked by this piece moving
+            if (isAdjacentOccupied(nState.board, oldX + 1, oldY + 1, 2)) {
+                nState = updateMoves(nState, nState.board[oldY + 2][oldX + 2].piece);
+            }
         }
         // check southWest space for adjacent piece to update
         if (isAdjacentOccupied(nState.board, oldX, oldY, 3)) {
             nState = updateMoves(nState, nState.board[oldY + 1][oldX - 1].piece);
+            // check for jumps unblocked by this piece moving
+            if (isAdjacentOccupied(nState.board, oldX - 1, oldY + 1, 3)) {
+                nState = updateMoves(nState, nState.board[oldY + 2][oldX - 2].piece);
+            }
         }
         // if the move was a jump, update pieces adjacent to jumped space
         if (typeof jumped !== 'undefined' && typeof jumpedX !== 'undefined' && typeof jumpedY !== 'undefined') { // if jumped is defined, then jumpedX and jumpedY will be defined as well
@@ -863,18 +896,34 @@ function updateMoves(boardState, piece, moved, oldX, oldY, jumped, jumpedX, jump
             // check top northWest for adjacent piece to update
             if (isAdjacentOccupied(nState.board, jumpedX, jumpedY, 0)) {
                 nState = updateMoves(nState, nState.board[jumpedY - 1][jumpedX - 1].piece);
+                // check for jumps unblocked by this piece moving
+                if (isAdjacentOccupied(nState.board, jumpedX - 1, jumpedY - 1, 0)) {
+                    nState = updateMoves(nState, nState.board[jumpedY - 2][jumpedX - 2].piece);
+                }
             }
             // check top northEast for adjacent piece to update
             if (isAdjacentOccupied(nState.board, jumpedX, jumpedY, 1)) {
                 nState = updateMoves(nState, nState.board[jumpedY - 1][jumpedX + 1].piece);
+                // check for jumps unblocked by this piece moving
+                if (isAdjacentOccupied(nState.board, jumpedX + 1, jumpedY - 1, 1)) {
+                    nState = updateMoves(nState, nState.board[jumpedY - 2][jumpedX + 2].piece);
+                }
             }
             // check southEast space for adjacent piece to update
             if (isAdjacentOccupied(nState.board, jumpedX, jumpedY, 2)) {
                 nState = updateMoves(nState, nState.board[jumpedY + 1][jumpedX + 1].piece);
+                // check for jumps unblocked by this piece moving
+                if (isAdjacentOccupied(nState.board, jumpedX + 1, jumpedY + 1, 2)) {
+                    nState = updateMoves(nState, nState.board[jumpedY + 2][jumpedX + 2].piece);
+                }
             }
             // check southWest space for adjacent piece to update
             if (isAdjacentOccupied(nState.board, jumpedX, jumpedY, 3)) {
                 nState = updateMoves(nState, nState.board[jumpedY + 1][jumpedX - 1].piece);
+                // check for jumps unblocked by this piece moving
+                if (isAdjacentOccupied(nState.board, jumpedX - 1, jumpedY + 1, 3)) {
+                    nState = updateMoves(nState, nState.board[jumpedY + 2][jumpedX - 2].piece);
+                }
             }
         }
     }
@@ -1205,13 +1254,17 @@ function canJump(board, x, y, p, direction) {
         }
     }
 }
-function paintSquare(x, y) {
+// return a string to fill in the space in the display of the game board
+function paintSquare(x, y, icon) {
     var color = "";
+    if (typeof icon == 'undefined') {
+        icon = "   ";
+    }
     if (Math.abs((x % 2) + (-1 * (y % 2))) == 0) {
-        color = "\x1b[41m   \x1b[0m"; // Red Square
+        color = "\x1b[41m" + icon + "\x1b[0m"; // Red Square
     }
     else {
-        color = "\x1b[40m   \x1b[0m"; // Black Square
+        color = "\x1b[40m" + icon + "\x1b[0m"; // Black Square
     }
     /*// check for the color the space should be
     switch (yMod) {
@@ -1238,27 +1291,36 @@ function paintSquare(x, y) {
     }*/
     return color;
 }
-function addPieceToSquareColor(piece, red) {
-    var result = "";
-    if (red) {
-        result = "\x1b[41m " + generatePieceIcon(piece) + " \x1b[0m"; // Red Square
-    }
-    else {
-        result = "\x1b[40m " + generatePieceIcon(piece) + " \x1b[0m"; // Black Square
-    }
-    return result;
-}
+// function addPieceToSquareColor(piece: GamePiece, red: boolean): string {
+//     var result: string = "";
+//     if (red) {
+//         result = "\x1b[41m " + generatePieceIcon(piece) + " \x1b[0m"; // Red Square
+//     } else {
+//         result = "\x1b[40m " + generatePieceIcon(piece) + " \x1b[0m"; // Black Square
+//     }
+//     return result;
+// }
 // return an ascii icon for each player's pieces
 //  -- piece: game piece to be translated into a ascii character
 function generatePieceIcon(piece) {
     var string = "";
     switch (piece.playerID) {
         case 0: {
-            string = "1"; // player 1 ascii piece
+            if (piece.kinged) {
+                string = " 1k";
+            }
+            else {
+                string = " 1 "; // player 1 ascii piece
+            }
             break;
         }
         default: {
-            string = "2"; // player 2 ascii piece
+            if (piece.kinged) {
+                string = " 2k";
+            }
+            else {
+                string = " 2 "; // player 2 ascii piece
+            }
             break;
         }
     }
@@ -1282,14 +1344,14 @@ function buildCheckersBoard(tempBoard, redStart) {
             if (y < 3 && color == redStart) {
                 var tempPiece = new GamePiece(false, 0, 0, x, y, []);
                 p1.push(tempPiece);
-                tempBoard[y][x] = new GameSpace(addPieceToSquareColor(tempPiece, color), tempPiece);
+                tempBoard[y][x] = new GameSpace(paintSquare(x, y, generatePieceIcon(tempPiece)), tempPiece);
                 debug += ", Team " + tempPiece.playerID + "), ";
             }
             // fill squares in bottom 3 rows with player 2 pieces
             else if (y > 4 && color == redStart) {
                 var tempPiece = new GamePiece(false, 1, 0, x, y, []);
                 p2.push(tempPiece);
-                tempBoard[y][x] = new GameSpace(addPieceToSquareColor(tempPiece, color), tempPiece);
+                tempBoard[y][x] = new GameSpace(paintSquare(x, y, generatePieceIcon(tempPiece)), tempPiece);
                 debug += ", Team " + tempPiece.playerID + "), ";
             }
             else {
